@@ -1,4 +1,4 @@
-FROM golang:1.14-alpine3.11@sha256:6578dc0c1bde86ccef90e23da3cdaa77fe9208d23c1bb31d942c8b663a519fa5 AS builder
+FROM golang:1.23-alpine3.19@sha256:5f3336882ad15d10ac1b59fbaba7cb84c35d4623774198b36ae60edeba45fd84 AS builder
 
 LABEL "com.github.actions.icon"="bell"
 LABEL "com.github.actions.color"="yellow"
@@ -12,11 +12,10 @@ COPY main.go ${GOPATH}/src/github.com/rtcamp/action-slack-notify
 ENV CGO_ENABLED 0
 ENV GOOS linux
 
-RUN go get -v ./...
-RUN go build -a -installsuffix cgo -ldflags '-w  -extldflags "-static"' -o /go/bin/slack-notify .
+RUN go build -a -installsuffix cgo -ldflags '-w  -extldflags "-static"' -o /go/bin/slack-notify main.go
 
-# alpine:latest at 2023-08-23T11:48:25.468623934UTC
-FROM alpine@sha256:7144f7bab3d4c2648d7e59409f15ec52a18006a128c733fcff20d3a4a54ba44a
+# alpine:latest as of 2024-03-11
+FROM alpine@sha256:56fa17d2a7e7f168a043a2712e63aed1f8543aeafdcee47c58dcffe38ed51099
 
 COPY --from=builder /go/bin/slack-notify /usr/bin/slack-notify
 
@@ -31,7 +30,7 @@ RUN apk update \
 		python3 \
 		py3-pip \
 		rsync \
-	&& pip3 install shyaml \
+	&& python3 -m pip install --break-system-packages shyaml \
 	&& rm -rf /var/cache/apk/*
 
 # Setup Vault
